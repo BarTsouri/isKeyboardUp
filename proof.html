@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html style="height: 100%">
+<head lang="en">
+    <meta charset="utf-8">
+    <title>Capriza</title>
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <meta name="description" content="Capriza">
+    <meta name="HandheldFriendly" content="True">
+    <meta name="MobileOptimized" content="320">
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1, user-scalable=no, minimum-scale=1.0,maximum-scale=1.0">
+    <meta name="viewport" content="initial-scale=1, user-scalable=no, minimum-scale=1.0,maximum-scale=1.0"
+          media="(device-height: 568px)">
+    <meta http-equiv="cleartype" content="on">
+
+    <link rel="apple-touch-icon-precomposed" sizes="144x144" href="images/touch/capriza-icon-144x144-precomposed.png">
+    <link rel="apple-touch-icon-precomposed" sizes="114x114" href="images/touch/capriza-icon-114x114.png">
+    <link rel="apple-touch-icon-precomposed" sizes="72x72" href="images/touch/capriza-icon-72x72.png">
+    <link rel="apple-touch-icon-precomposed" href="images/touch/capriza-icon-57x57.png">
+    <link rel="shortcut icon" href="images/touch/capriza-icon.png">
+
+    <!-- Tile icon for Win8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="img/touch/apple-touch-icon-144x144-precomposed.png">
+    <meta name="msapplication-TileColor" content="#222222">
+
+
+    <!-- For iOS web apps. Delete if not needed. https://github.com/h5bp/mobile-boilerplate/issues/94 -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Capriza">
+    <meta charset="UTF-8">
+    <title></title>
+    <style>
+        body{height: 100%;}
+    </style>
+</head>
+<body>
+<textarea id="textarea"></textarea><br>
+<span id="msg"></span>
+<span id="msg-elem-height"></span>
+<div style="display: flex; flex-direction: column; height: 80%; width: 100%">
+    <div id="grow-elem" style="background-color: #cd5c5c; flex-grow: 1; width: 100%"></div>
+</div>
+<script type="text/javascript">
+
+    // see how the red div's height doesnt change
+    function fixViewportWhenKeyboardInUp() {
+        var originalHeight = window.innerHeight,
+                originalWidth = window.innerWidth,
+                isCurrentOrientationPortrait = window.innerHeight > window.innerWidth,
+                isOriginalOrientationPortrait = isCurrentOrientationPortrait,
+                isKeyboardOpen = false,
+                addressbarHeight;
+
+        var msg = document.getElementById('msg');
+
+        window.addEventListener('resize', function(){window.requestAnimationFrame(onResize)}, true);
+
+        function onResize(){
+
+            if (isKeyboardStateChanged()) {
+
+                if (isKeyboardHeightSlightlyChanged()){
+                    console.log('keyboard height was slightly changed');
+                    msg.innerHTML = 'keyboard height was slightly changed';
+                    return;
+                }
+
+                console.log('keyboard state changed');
+                msg.innerHTML = 'keyboard state changed';
+                setKeyboardState();
+                if (isKeyboardOpen) {
+
+                    console.log('keyboard is opened');
+                    msg.innerHTML = 'keyboard is opened';
+                    onKeyboardUp();
+                } else {
+
+                    console.log('keyboard is closed');
+                    msg.innerHTML = 'keyboard is closed';
+                    onKeyboardDown();
+                }
+            } else {
+
+                console.log('orientation changed');
+                onOrientationChange();
+
+                // the view was rotated while the keyboard was open
+                if (isKeyboardOpen){
+                    console.log('the view was rotated while the keyboard was open');
+                    msg.innerHTML = 'the view was rotated while the keyboard was open';
+                    onOrientationChangeAndKeyboardUp();
+                }
+            }
+        }
+
+        /**
+         * when the orientation changes, I can deduce the address bar size
+         */
+        function onOrientationChange(){
+            if (!addressbarHeight){
+                addressbarHeight = window.innerWidth - originalHeight;
+            }
+
+            isCurrentOrientationPortrait = !isCurrentOrientationPortrait;
+            prevHeight = window.innerHeight;
+            console.log('orientation is:' +(isCurrentOrientationPortrait? 'portrait' : 'landscape'))
+        }
+
+
+        var prevWidth = window.innerWidth;
+
+        /**
+         * the keyboard state is changed when resize is triggered and the width didn't change
+         */
+        function isKeyboardStateChanged(){
+            var isOK = !isWidthChanged();
+            prevWidth = window.innerWidth;
+            return isOK;
+        }
+
+        /**
+         * resize can be triggered even when changing the keyboard mode to symbols - which is a slight change
+         * resize can be trgirred after orientation change, where the keyboard height slightly change
+         * E.g galaxy tab
+         * Keyboards usually have different height
+         */
+        function isKeyboardHeightSlightlyChanged(){
+            return Math.abs(prevHeight - window.innerHeight) < 40;
+        }
+
+        function isWidthChanged(){
+            return prevWidth != window.innerWidth;
+        }
+
+        var prevHeight = window.innerHeight;
+
+        /**
+         * determines if the keyboard is on or not
+         */
+        function setKeyboardState(){
+            isKeyboardOpen = prevHeight > window.innerHeight;
+            prevHeight = window.innerHeight;
+        }
+
+        /**
+         * set the body with constant height
+         */
+        function onKeyboardUp(){
+            var bodyHeight = originalHeight;
+
+            if (isOriginalOrientationPortrait ^ isCurrentOrientationPortrait) { // xor.
+                console.log('subtract addressbar');
+                bodyHeight = originalWidth - addressbarHeight;
+            }
+
+            document.body.style.height = bodyHeight + 'px';
+            console.log('set body height: ' + bodyHeight)
+        }
+
+        function onKeyboardDown(){
+            console.log('remove body style');
+            document.body.style.height = '';
+        }
+
+        function onOrientationChangeAndKeyboardUp(){
+            onKeyboardUp();
+        }
+    }
+
+    // make sure that the keyboard is down
+    var textarea = document.getElementById('textarea');
+    textarea.blur();
+    setTimeout(fixViewportWhenKeyboardInUp, 300);
+
+    // informative
+    var growElem = document.getElementById('grow-elem'),
+        msgElemHeight = document.getElementById('msg-elem-height');
+    setInterval(function(){
+        msgElemHeight.innerHTML = ". The red div's height remains: " + growElem.getBoundingClientRect().height;
+    }, 100);
+</script>
+</body>
+</html>
